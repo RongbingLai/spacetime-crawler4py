@@ -2,7 +2,6 @@ import re
 from urllib.parse import urlparse
 
 from bs4 import BeautifulSoup
-# soup = BeautifulSoup(html_doc, 'html.parser')
 
 def scraper(url, resp):
     links = extract_next_links(url, resp)
@@ -19,13 +18,23 @@ def extract_next_links(url, resp):
     #         resp.raw_response.content: the content of the page!
     # Return a list with the hyperlinks (as strings) scrapped from resp.raw_response.content
     result = list()
+    if resp.status != 200:
+        print("------------")
+        print("[invalid] status: " + resp.status)
+        print("[invalid] url: " + resp.url)
+        print("------------")
     
+    soup = BeautifulSoup(resp.raw_response.content, 'html.parser')
     return result
 
 def is_valid(url):
     # Decide whether to crawl this url or not. 
     # If you decide to crawl it, return True; otherwise return False.
     # There are already some conditions that return False.
+
+    # Requirements:
+    # 1. in the domain of initial domains and paths
+    #
     try:
         parsed = urlparse(url)
         if parsed.scheme not in set(["http", "https"]):
