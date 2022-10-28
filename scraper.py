@@ -26,8 +26,7 @@ def extract_next_links(url, resp):
     else:
         soup = BeautifulSoup(resp.raw_response.content.text, "html.parser")
         for url in soup.find_all('a'):
-            if is_valid(url):
-                result.append(url)
+            result.append(url.get('href'))
             
     return result
 
