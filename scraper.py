@@ -19,26 +19,24 @@ def extract_next_links(url, resp):
     # Return a list with the hyperlinks (as strings) scrapped from resp.raw_response.content
 
     #TODO: Fix crawler trap
-    result = list()
+    result = set()
     if resp.status != 200:
         print("------------")
         print("[invalid] status: " + resp.status)
         print("[invalid] url: " + resp.url)
         print("------------")
     else:
-        soup = BeautifulSoup(resp.raw_response.content.text, "html.parser")
+        soup = BeautifulSoup(resp.raw_response.content, "html.parser")
         for link in soup.find_all('a'):
             url = link.get('href')
             #eliminate the fragment of the url.
             index = url.find("#")
             if index != -1:
                 url = url[:index]
-            result.append(url)
+            result.add(url)
             time.sleep(0.5)
 
-
-            
-    return result
+    return list(result)
 
 def is_valid(url):
     # Decide whether to crawl this url or not. 
