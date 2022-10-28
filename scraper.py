@@ -20,22 +20,18 @@ def extract_next_links(url, resp):
 
     #TODO: Fix crawler trap
     result = set()
-    if resp.status != 200:
-        print("------------")
-        print("[invalid] status: " + resp.status)
-        print("[invalid] url: " + resp.url)
-        print("------------")
-    else:
-        soup = BeautifulSoup(resp.raw_response.content, "html.parser")
-        for link in soup.find_all('a'):
-            if resp.status == 200:
-                url = link.get('href')
-                #eliminate the fragment of the url.
-                index = url.find("#")
-                if index != -1:
-                    url = url[:index]
-                result.add(url)
-                time.sleep(0.5)
+    
+    soup = BeautifulSoup(resp.raw_response.content, "html.parser")
+    for link in soup.find_all('a'):
+        # for now just use 200, but need to handle other codes
+        if resp.status == 200:
+            url = link.get('href')
+            #eliminate the fragment of the url.
+            index = url.find("#")
+            if index != -1:
+                url = url[:index]
+            result.add(url)
+            time.sleep(0.5)
 
     return list(result)
 
