@@ -1,6 +1,6 @@
 import re
 from urllib.parse import urlparse
-
+import time
 from bs4 import BeautifulSoup
 
 def scraper(url, resp):
@@ -17,6 +17,8 @@ def extract_next_links(url, resp):
     #         resp.raw_response.url: the url, again
     #         resp.raw_response.content: the content of the page!
     # Return a list with the hyperlinks (as strings) scrapped from resp.raw_response.content
+
+    #TODO: Fix crawler trap
     result = list()
     if resp.status != 200:
         print("------------")
@@ -27,6 +29,9 @@ def extract_next_links(url, resp):
         soup = BeautifulSoup(resp.raw_response.content.text, "html.parser")
         for url in soup.find_all('a'):
             result.append(url.get('href'))
+            time.sleep(0.5)
+            
+
             
     return result
 
