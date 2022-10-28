@@ -27,10 +27,15 @@ def extract_next_links(url, resp):
         print("------------")
     else:
         soup = BeautifulSoup(resp.raw_response.content.text, "html.parser")
-        for url in soup.find_all('a'):
-            result.append(url.get('href'))
+        for link in soup.find_all('a'):
+            url = link.get('href')
+            #eliminate the fragment of the url.
+            index = url.find("#")
+            if index != -1:
+                url = url[:index]
+            result.append(url)
             time.sleep(0.5)
-            
+
 
             
     return result
