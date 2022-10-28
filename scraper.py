@@ -23,8 +23,12 @@ def extract_next_links(url, resp):
         print("[invalid] status: " + resp.status)
         print("[invalid] url: " + resp.url)
         print("------------")
-    
-    soup = BeautifulSoup(resp.raw_response.content, 'html.parser')
+    else:
+        soup = BeautifulSoup(resp.raw_response.content.text, "html.parser")
+        for url in soup.find_all('a'):
+            if is_valid(url):
+                result.append(url)
+            
     return result
 
 def is_valid(url):
