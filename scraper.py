@@ -34,7 +34,9 @@ def is_valid(url):
 
     # Requirements:
     # 1. in the domain of initial domains and paths
-    #
+    # 2. remove the fragment part
+    # 3. filter out urls that do not point to webpages (add more in the pattern)
+    # 4. 
     try:
         parsed = urlparse(url)
         if parsed.scheme not in set(["http", "https"]):
