@@ -1,5 +1,6 @@
 import re
 from urllib.parse import urlparse
+from urllib import request
 import time
 from bs4 import BeautifulSoup
 
@@ -24,8 +25,8 @@ def extract_next_links(url, resp):
     soup = BeautifulSoup(resp.raw_response.content, "html.parser")
     for link in soup.find_all('a'):
         # for now just use 200, but need to handle other codes
-        if resp.status == 200:
-            url = link.get('href')
+        url = link.get('href')
+        if request.urlopen(url).getcode() == 200:
             #eliminate the fragment of the url.
             index = url.find("#")
             if index != -1:
