@@ -1,13 +1,25 @@
 import re
+from urllib.request import Request, urlopen
 from urllib.parse import urlparse
-from urllib import request
-import requests
 import time
 from bs4 import BeautifulSoup
 
 def scraper(url, resp):
+    # links = extract_next_links(url, resp)
+    # return [link for link in links if is_valid(link)]
     links = extract_next_links(url, resp)
-    return [link for link in links if is_valid(link)]
+    ret = []
+    for link in links:
+        if is_valid(link):
+            # pagecount+= 1
+            ret.append(link)
+            # req = Request(link)
+            # html_page = urlopen(req)
+            # soup = BeautifulSoup(html_page, 'html.parser')
+            # if len(soup.get_text()) > longestpage:
+            #     longestpage = len(soup.get_text())
+    return ret
+
 
 def extract_next_links(url, resp):
     # Implementation required.
@@ -21,21 +33,26 @@ def extract_next_links(url, resp):
     # Return a list with the hyperlinks (as strings) scrapped from resp.raw_response.content
 
     #TODO: Fix crawler trap
-    result = set()
     
-    soup = BeautifulSoup(resp.raw_response.content, "html.parser")
-    for link in soup.find_all('a'):
-        # for now just use 200, but need to handle other codes
-        url = link.get('href')
-        if requests.head(url).status_code == 200:
+    ret = set()
+    if resp.status == 200:
+        # code citation: https://pythonprogramminglanguage.com/get-links-from-webpage/
+        req = Request(url)
+        html_page = urlopen(req)
+        soup = BeautifulSoup(html_page, "lxml")
+
+        for link in soup.findAll('a'):
             #eliminate the fragment of the url.
+            url = link.get('href')
             index = url.find("#")
             if index != -1:
                 url = url[:index]
-            result.add(url)
+            ret.append(url)
             time.sleep(0.5)
+    else:
+        print(resp.error)
+    return list(ret)
 
-    return list(result)
 
 def is_valid(url):
     # Decide whether to crawl this url or not. 
@@ -51,6 +68,10 @@ def is_valid(url):
         parsed = urlparse(url)
         if parsed.scheme not in set(["http", "https"]):
             return False
+
+        if parsed.netloc not in set(["www.ics.uci.edu","www.cs.uci.edu", "www.informatics.uci.edu", "www.stat.uci.edu", "today.uci.edu/department/information_computer_sciences"]):
+            return False
+
         return not re.match(
             r".*\.(css|js|bmp|gif|jpe?g|ico"
             + r"|png|tiff?|mid|mp2|mp3|mp4"
