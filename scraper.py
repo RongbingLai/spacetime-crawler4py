@@ -47,7 +47,7 @@ def extract_next_links(url, resp):
             index = url.find("#")
             if index != -1:
                 url = url[:index]
-            ret.append(url)
+            ret.add(url)
             time.sleep(0.5)
     else:
         print(resp.error)
