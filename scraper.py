@@ -1,8 +1,14 @@
 import re
 from urllib.request import Request, urlopen
 from urllib.parse import urlparse
-import time
+import time 
+import tokenize
 from bs4 import BeautifulSoup
+
+
+maxCount = 0 # keep track of the longest page in terms of the number of words
+maxUrl = "" # keep track of the url of the longest page
+
 
 def scraper(url, resp):
     links = extract_next_links(url, resp)
@@ -23,11 +29,26 @@ def extract_next_links(url, resp):
     #TODO: Fix crawler trap
     
     ret = set()
+    
+
     if resp.status == 200:
         # code citation: https://pythonprogramminglanguage.com/get-links-from-webpage/
         req = Request(url)
         html_page = urlopen(req)
         soup = BeautifulSoup(html_page, "lxml")
+        
+################ added counter the longest page in terms of the number of words and related URL
+
+        global maxCount
+        global maxUrl
+        if (maxCount < len(website_content)):
+            maxCount = len(website_content)
+            maxUrl = resp.url #??? url or resp.url????
+            
+        print(maxCount)
+        print("\n\n\n")
+        print(maxUrl)
+###################
 
         for link in soup.findAll('a'):
             #eliminate the fragment of the url.
@@ -37,7 +58,7 @@ def extract_next_links(url, resp):
                 if index != -1:
                     url = url[:index]
                 ret.add(url)
-            time.sleep(0.5)
+            #time.sleep(0.5)
     else:
         print(resp.error)
     return list(ret)
