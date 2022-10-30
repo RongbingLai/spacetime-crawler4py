@@ -4,9 +4,15 @@ from urllib.parse import urlparse
 import time
 from bs4 import BeautifulSoup
 
+
 def scraper(url, resp):
     links = extract_next_links(url, resp)
-    return [link for link in links if is_valid(link)]
+    result = list()
+    for link in links:
+        if is_valid(link):
+            result.append(link)
+            
+    return result
 
 
 def extract_next_links(url, resp):
@@ -27,7 +33,7 @@ def extract_next_links(url, resp):
         # code citation: https://pythonprogramminglanguage.com/get-links-from-webpage/
         req = Request(url)
         html_page = urlopen(req)
-        soup = BeautifulSoup(html_page, "lxml")
+        soup = BeautifulSoup(resp.raw_response.content, "lxml")
 
         for link in soup.findAll('a'):
             #eliminate the fragment of the url.
@@ -37,7 +43,6 @@ def extract_next_links(url, resp):
                 if index != -1:
                     url = url[:index]
                 ret.add(url)
-            time.sleep(0.5)
     else:
         print(resp.error)
     return list(ret)
