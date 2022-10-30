@@ -4,11 +4,12 @@ from urllib.parse import urlparse
 import time 
 import tokenize
 from bs4 import BeautifulSoup
+#from collections import defaultdict
 
 
 maxCount = 0 # keep track of the longest page in terms of the number of words
 maxUrl = "" # keep track of the url of the longest page
-
+# ics_subdomains = defaultdict(int)
 
 def scraper(url, resp):
     links = extract_next_links(url, resp)
@@ -30,7 +31,6 @@ def extract_next_links(url, resp):
     
     ret = set()
     
-
     if resp.status == 200:
         # code citation: https://pythonprogramminglanguage.com/get-links-from-webpage/
         req = Request(url)
@@ -77,6 +77,10 @@ def is_valid(url):
         parsed = urlparse(url)
         if parsed.scheme not in set(["http", "https"]):
             return False
+
+        # record subdomains
+        # if re.match(r"www.*\.ics\.uci\.edu/*", parsed.netloc.lower()):
+        #     ics_subdomains[parsed.netloc] += 1
 
         # make sure is in the domain of initial domains
         if not re.match(
