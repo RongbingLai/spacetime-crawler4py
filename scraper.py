@@ -79,12 +79,8 @@ def is_valid(url):
             return False
 
         # make sure is in the domain of initial domains
-        if parsed.netloc not re.match(
-            r"*\.ics\.uci\.edu/*"
-            + r"*\.cs\.uci\.edu/*"
-            + r"*\.informatics\.uci\.edu/*"
-            + r"*\.stat\.uci\.edu/*"
-        )
+        if not re.match(
+            r"www.*\.ics\.uci\.edu/*|www.*\.cs\.uci\.edu/*|www.*\.informatics\.uci\.edu/*|www.*\.stat\.uci\.edu/*", parsed.netloc.lower()):
             return False
 
         return not re.match(
