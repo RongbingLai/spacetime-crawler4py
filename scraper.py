@@ -9,6 +9,22 @@ from bs4 import BeautifulSoup
 maxCount = 0 # keep track of the longest page in terms of the number of words
 maxUrl = "" # keep track of the url of the longest page
 
+def countMax(soup, url):
+    ################ added counter the longest page in terms of the number of words and related URL
+    content = soup.get_text()
+    #print(content)
+    website_content = re.split(r'[^0-9a-zA-Z]', content)
+
+    global maxCount
+    global maxUrl
+    if (maxCount < len(website_content)):
+        maxCount = len(website_content)
+        maxUrl = url #??? url or resp.url????
+
+    # print(maxCount)
+    # print(maxUrl)
+    return len(website_content)
+###################
 
 def scraper(url, resp):
     links = extract_next_links(url, resp)
@@ -32,24 +48,20 @@ def extract_next_links(url, resp):
     
 
     if resp.status == 200:
+        
+
         # code citation: https://pythonprogramminglanguage.com/get-links-from-webpage/
         req = Request(url)
         html_page = urlopen(req)
         soup = BeautifulSoup(html_page, "lxml")
         
-################ added counter the longest page in terms of the number of words and related URL
+        #resp.url = "http://www.ics.uci.edu/~gmark"
+        
+        currentLength = countMax(soup, resp.url)
 
-        global maxCount
-        global maxUrl
-        if (maxCount < len(website_content)):
-            maxCount = len(website_content)
-            maxUrl = resp.url #??? url or resp.url????
-            
-        print(maxCount)
-        print("\n\n\n")
-        print(maxUrl)
-###################
-
+        if currentLength < 20:
+            return list()
+        
         for link in soup.findAll('a'):
             #eliminate the fragment of the url.
             url = link.get('href')
@@ -58,6 +70,7 @@ def extract_next_links(url, resp):
                 if index != -1:
                     url = url[:index]
                 ret.add(url)
+            #time.sleep(0.5)
     else:
         print(resp.error)
     return list(ret)
@@ -69,9 +82,10 @@ def is_valid(url):
     # There are already some conditions that return False.
 
     # Requirements:
+    # - filter out urls that do not point to webpages (add more in the pattern)
     # - pdf files that do not end in .pdf
     # https://stackoverflow.com/questions/312230/proper-mime-media-type-for-pdf-files
-    # - low information
+    # - low information?
     # - large files
     try:
         parsed = urlparse(url)
@@ -79,12 +93,7 @@ def is_valid(url):
             return False
 
         # make sure is in the domain of initial domains
-        if parsed.netloc not re.match(
-            r"*\.ics\.uci\.edu/*"
-            + r"*\.cs\.uci\.edu/*"
-            + r"*\.informatics\.uci\.edu/*"
-            + r"*\.stat\.uci\.edu/*"
-        )
+        if parsed.netloc not in set(["www.ics.uci.edu","www.cs.uci.edu", "www.informatics.uci.edu", "www.stat.uci.edu"]):
             return False
 
         return not re.match(
@@ -95,7 +104,6 @@ def is_valid(url):
             + r"|data|dat|exe|bz2|tar|msi|bin|7z|psd|dmg|iso"
             + r"|epub|dll|cnf|tgz|sha1"
             + r"|thmx|mso|arff|rtf|jar|csv"
-            + r"|py|java|c"
             + r"|rm|smil|wmv|swf|wma|zip|rar|gz)$", parsed.path.lower())
 
     except TypeError:
