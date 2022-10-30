@@ -4,11 +4,13 @@ from urllib.parse import urlparse
 import time 
 import tokenize
 from bs4 import BeautifulSoup
-#from collections import defaultdict
+from collections import defaultdict
 
 
 maxCount = 0 # keep track of the longest page in terms of the number of words
 maxUrl = "" # keep track of the url of the longest page
+ics_subdomains = defaultdict(int)
+bad_urls = set()
 
 def countMax(soup, url):
     ################ added counter the longest page in terms of the number of words and related URL
@@ -47,32 +49,31 @@ def extract_next_links(url, resp):
     
     ret = set()
     
-    if resp.status == 200:
-        
+    try:
+        if resp.status == 200:
+            req = Request(url)
+            html_page = urlopen(req)
+            soup = BeautifulSoup(html_page, "lxml")
+            
+            #resp.url = "http://www.ics.uci.edu/~gmark"
+            
+            currentLength = countMax(soup, resp.url)
 
-        # code citation: https://pythonprogramminglanguage.com/get-links-from-webpage/
-        req = Request(url)
-        html_page = urlopen(req)
-        soup = BeautifulSoup(html_page, "lxml")
-        
-        #resp.url = "http://www.ics.uci.edu/~gmark"
-        
-        currentLength = countMax(soup, resp.url)
-
-        if currentLength < 20:
-            return list()
-        
-        for link in soup.findAll('a'):
-            #eliminate the fragment of the url.
-            url = link.get('href')
-            if url:
-                index = url.find("#")
-                if index != -1:
-                    url = url[:index]
-                ret.add(url)
-            #time.sleep(0.5)
-    else:
-        print(resp.error)
+            if currentLength < 20:
+                return list()
+            
+            for link in soup.findAll('a'):
+                #eliminate the fragment of the url.
+                raw_url = link.get('href')
+                if raw_url:
+                    index = raw_url.find("#")
+                    if index != -1:
+                        raw_url = raw_url[:index]
+                    ret.add(raw_url)
+        else:
+            bad_urls.add(resp.url)
+    except:
+        bad_urls.add(resp.url)
     return list(ret)
 
 
@@ -88,27 +89,32 @@ def is_valid(url):
     # - low information?
     # - large files
     try:
+        if url in bad_urls:
+            return False
+
         parsed = urlparse(url)
+
         if parsed.scheme not in set(["http", "https"]):
             return False
 
-        # record subdomains
-        # if re.match(r"www.*\.ics\.uci\.edu/*", parsed.netloc.lower()):
-        #     ics_subdomains[parsed.netloc] += 1
+        #record subdomains
+        if re.match(r"www.+\.ics\.uci\.edu\/*", parsed.netloc.lower()):
+            ics_subdomains[parsed.netloc] += 1
 
         # make sure is in the domain of initial domains
         if not re.match(
-            r"www.*\.ics\.uci\.edu/*|www.*\.cs\.uci\.edu/*|www.*\.informatics\.uci\.edu/*|www.*\.stat\.uci\.edu/*", parsed.netloc.lower()):
+            r"www.*\.ics\.uci\.edu\/*|www.*\.cs\.uci\.edu\/*|www.*\.informatics\.uci\.edu\/*|www.*\.stat\.uci\.edu\/*", parsed.netloc.lower()):
             return False
 
+        # added odc, java, py, c, txt, ss, scm
         return not re.match(
             r".*\.(css|js|bmp|gif|jpe?g|ico"
             + r"|png|tiff?|mid|mp2|mp3|mp4"
             + r"|wav|avi|mov|mpeg|ram|m4v|mkv|ogg|ogv|pdf"
             + r"|ps|eps|tex|ppt|pptx|doc|docx|xls|xlsx|names"
             + r"|data|dat|exe|bz2|tar|msi|bin|7z|psd|dmg|iso"
-            + r"|epub|dll|cnf|tgz|sha1"
-            + r"|thmx|mso|arff|rtf|jar|csv"
+            + r"|epub|dll|cnf|tgz|sha1|txt|ss|scm"
+            + r"|thmx|mso|arff|rtf|jar|csv|odc|py|java|c"
             + r"|rm|smil|wmv|swf|wma|zip|rar|gz)$", parsed.path.lower())
 
     except TypeError:
