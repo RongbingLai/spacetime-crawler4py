@@ -5,20 +5,8 @@ import time
 from bs4 import BeautifulSoup
 
 def scraper(url, resp):
-    # links = extract_next_links(url, resp)
-    # return [link for link in links if is_valid(link)]
     links = extract_next_links(url, resp)
-    ret = []
-    for link in links:
-        if is_valid(link):
-            # pagecount+= 1
-            ret.append(link)
-            # req = Request(link)
-            # html_page = urlopen(req)
-            # soup = BeautifulSoup(html_page, 'html.parser')
-            # if len(soup.get_text()) > longestpage:
-            #     longestpage = len(soup.get_text())
-    return ret
+    return [link for link in links if is_valid(link)]
 
 
 def extract_next_links(url, resp):
@@ -44,10 +32,11 @@ def extract_next_links(url, resp):
         for link in soup.findAll('a'):
             #eliminate the fragment of the url.
             url = link.get('href')
-            index = url.find("#")
-            if index != -1:
-                url = url[:index]
-            ret.add(url)
+            if url:
+                index = url.find("#")
+                if index != -1:
+                    url = url[:index]
+                ret.add(url)
             time.sleep(0.5)
     else:
         print(resp.error)
@@ -60,16 +49,18 @@ def is_valid(url):
     # There are already some conditions that return False.
 
     # Requirements:
-    # 1. in the domain of initial domains and paths
-    # 2. remove the fragment part
-    # 3. filter out urls that do not point to webpages (add more in the pattern)
-    # 4. 
+    # - filter out urls that do not point to webpages (add more in the pattern)
+    # - pdf files that do not end in .pdf
+    # https://stackoverflow.com/questions/312230/proper-mime-media-type-for-pdf-files
+    # - low information?
+    # - large files
     try:
         parsed = urlparse(url)
         if parsed.scheme not in set(["http", "https"]):
             return False
 
-        if parsed.netloc not in set(["www.ics.uci.edu","www.cs.uci.edu", "www.informatics.uci.edu", "www.stat.uci.edu", "today.uci.edu/department/information_computer_sciences"]):
+        # make sure is in the domain of initial domains
+        if parsed.netloc not in set(["www.ics.uci.edu","www.cs.uci.edu", "www.informatics.uci.edu", "www.stat.uci.edu"]):
             return False
 
         return not re.match(
