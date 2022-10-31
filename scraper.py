@@ -139,6 +139,8 @@ def is_valid(url):
     # If you decide to crawl it, return True; otherwise return False.
     # There are already some conditions that return False.
 
+    # DEAL WITH PDF?!
+
     parsed = urlparse(url)
     try:
         #Url too short, not a valid url
@@ -153,6 +155,9 @@ def is_valid(url):
 
         #record subdomains
         if ".ics.uci.edu" in parsed.netloc.lower() and parsed.netloc.lower() != "www.ics.uci.edu":
+            key = parsed.netloc.lower()
+            if "www." in key or "www-" in key:
+                key = key[4:]
             ics_subdomains[parsed.netloc] += 1
 
         # make sure is in the domain of initial domains
@@ -182,9 +187,8 @@ def is_valid(url):
 
 def output():
     print("unique_pages: ", len(scraped_urls))
-    print("longest page is " + maxUrl + "with " + str(maxCount) + " words")
-    sorted(ics_subdomains)
-    for key in ics_subdomains:
+    print("longest page is " + maxUrl + " with " + str(maxCount) + " words")
+    for key in sorted(ics_subdomains):
         print(key + ": " + str(ics_subdomains[key]))
     top_50_tokens()
     
