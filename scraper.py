@@ -63,14 +63,14 @@ def top_50_tokens():
     Use the stopwords file to generate a stopwords set. Parse the token txt file and add lowercase
     of them into a freq dict only if they are not stopwords. Finally returns the top 50 elements
     '''
-    g = open("stopwords.txt", "r")
+    g = open("stopwords.txt", "r", encoding="utf-8")
     lines = g.readlines()
     g.close()
     stopwords = set()
     for line in lines:
         stopwords.add(line.strip())
     
-    f = open("tokens.txt", "r")
+    f = open("tokens.txt", "r", encoding="utf-8")
     lines = f.readlines()
     f.close()
     fdist = FreqDist()#keep track of the token frequencies
