@@ -6,30 +6,36 @@ from bs4 import BeautifulSoup
 from collections import defaultdict
 
 
-maxCount = 0 # keep track of the longest page in terms of the number of words
-maxUrl = "" # keep track of the url of the longest page
+# keep track of the longest page in terms of the number of words
+maxCount = 0 
+# keep track of the url of the longest page
+maxUrl = "" 
+# store the subdomains under ics.uci.edu
 ics_subdomains = defaultdict(int)
+# record bad urls that we do not want to crawl
 bad_urls = set()
+# record the total unique_pages
 unique_pages = 0
-
+# record scraped urls
 scraped_urls = set()
+
 #2. find the longest page
 def countMax(soup, url):
-    ################ added counter the longest page in terms of the number of words and related URL
+    #added counter the longest page in terms of the number of words and related URL
     content = soup.get_text()
     #print(content)
     website_content = re.split(r'[^0-9a-zA-Z]', content)
 
     global maxCount
     global maxUrl
-    if (maxCount < len(website_content)):
+    if maxCount < len(website_content):
         maxCount = len(website_content)
         maxUrl = url #??? url or resp.url????
 
     # print(maxCount)
     # print(maxUrl)
     return len(website_content)
-###################
+
 
 def scrape_text(soup, url):
     content = soup.get_text(strip=True)
@@ -40,6 +46,7 @@ def scraper(url, resp):
     result = list()
     for link in links:
         if is_valid(link):
+            unique_pages += 1
             result.append(link)
             
     return result
@@ -62,8 +69,6 @@ def extract_next_links(url, resp):
     try:
         if resp.status == 200 and is_valid(resp.url):
             soup = BeautifulSoup(resp.raw_response, "html.parser")
-            
-            #resp.url = "http://www.ics.uci.edu/~gmark"
             
             currentLength = countMax(soup, resp.url)
             #If the words in the url is fewer than 20, ignore the page.
@@ -108,9 +113,10 @@ def is_valid(url):
     # - low information?
     # - large files
     try:
+        #Url too short, not a valid url
         if len(url) < 6:
-            #Url too short, not a valid url
             return False
+
         if url in bad_urls:
             return False
 
@@ -126,7 +132,12 @@ def is_valid(url):
 
         # make sure is in the domain of initial domains
         if not re.match(
-            r"www.*\.ics\.uci\.edu\/*|www.*\.cs\.uci\.edu\/*|www.*\.informatics\.uci\.edu\/*|www.*\.stat\.uci\.edu\/*", parsed.netloc.lower()):
+            r"(.*)\.ics\.uci\.edu(.*)"
+            + r"|(.*)\.cs\.uci\.edu(.*)"
+            + r"|(.*)\.informatics\.uci\.edu(.*)"
+            + r"|(.*)\.stat\.uci\.edu(.*)"
+            , parsed.netloc.lower()):
+            print("is_valid(",parsed.netloc.lower(),") -> Subdomains")
             return False
 
         # added odc, java, py, c, txt, ss, scm
@@ -143,3 +154,7 @@ def is_valid(url):
     except TypeError:
         print ("TypeError for ", parsed)
         raise
+
+def output():
+    print("unique_pages: ", unique_pages)
+    print(scraper.ics_subdomains)

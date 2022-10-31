@@ -20,8 +20,7 @@ class Crawler(object):
     def start(self):
         self.start_async()
         self.join()
-        print("unique_pages: ", unique_pages)
-        print(scraper.ics_subdomains)
+        scraper.output()
 
     def join(self):
         for worker in self.workers:
