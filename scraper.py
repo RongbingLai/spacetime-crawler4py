@@ -122,7 +122,8 @@ def extract_next_links(url, resp):
                 
                 #Detect and avoid crawler traps
                 if raw_url in scraped_urls:
-                    print("repeated")
+                    # print("repeated")
+                    pass
                 else:
                     scraped_urls.add(raw_url)
                     ret.add(raw_url)
@@ -144,21 +145,23 @@ def is_valid(url):
     # https://stackoverflow.com/questions/312230/proper-mime-media-type-for-pdf-files
     # - low information?
     # - large files
+    parsed = urlparse(url)
     try:
         #Url too short, not a valid url
+        if not url:
+            return False
+        
         if len(url) < 6:
             return False
 
         if url in bad_urls:
             return False
 
-        parsed = urlparse(url)
-
         if parsed.scheme not in set(["http", "https"]):
             return False
 
         #record subdomains
-        if re.match(r".+\.ics\.uci\.edu(.*)", parsed.netloc.lower()):
+        if "ics.uci.edu" in parsed.netloc.lower() and parsed.netloc.lower() != "www.ics.uci.edu":
             ics_subdomains[parsed.netloc] += 1
 
         # make sure is in the domain of initial domains
