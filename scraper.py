@@ -46,12 +46,19 @@ def countMax(soup, url):
 
 # tokenize text from the page
 def scrape_text(soup):
+    '''
+    Scrape the texts and strip them, forming a paragraph and store them into the txt
+    '''
     content = soup.get_text(strip=True)
     f = open("tokens.txt", "w")
     f.write(content)
     f.close()
 
 def top_50_tokens():
+    '''
+    Use the stopwords file to generate a stopwords set. Parse the token txt file and add lowercase
+    of them into a freq dict only if they are not stopwords. Finally returns the top 50 elements
+    '''
     g = open("stopwords.txt", "r")
     lines = g.readlines()
     g.close()
@@ -71,6 +78,8 @@ def top_50_tokens():
                 fdist[token.lower()] += 1
 
     print(fdist.most_common(50))
+    return fdist.most_common(50)
+    
 
 def extract_next_links(url, resp):
     # Implementation required.
