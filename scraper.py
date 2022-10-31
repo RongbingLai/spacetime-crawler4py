@@ -10,6 +10,7 @@ maxCount = 0 # keep track of the longest page in terms of the number of words
 maxUrl = "" # keep track of the url of the longest page
 ics_subdomains = defaultdict(int)
 bad_urls = set()
+unique_pages = 0
 
 scraped_urls = set()
 #2. find the longest page
