@@ -14,7 +14,7 @@ maxUrl = ""
 # store the subdomains under ics.uci.edu
 ics_subdomains = defaultdict(int)
 # record bad urls that we do not want to crawl
-bad_urls = set("https://wics.ics.uci.edu/events")
+bad_urls = set("https://wics.ics.uci.edu/events"'https://wics.ics.uci.edu/events')
 # record scraped urls
 scraped_urls = set()
 
@@ -50,8 +50,9 @@ def scrape_text(soup):
     Scrape the texts and strip them, forming a paragraph and store them into the txt
     '''
     content = soup.get_text(strip=True)
-    f = open("tokens.txt", "w")
+    f = open("tokens.txt", "a")
     f.write(content)
+    f.write('\n')
     f.close()
 
 def top_50_tokens():
@@ -65,12 +66,11 @@ def top_50_tokens():
     stopwords = set()
     for line in lines:
         stopwords.add(line.strip())
-    
     f = open("tokens.txt", "r", encoding="utf-8")
     lines = f.readlines()
     f.close()
     fdist = FreqDist()#keep track of the token frequencies
-    tokenizer = RegexpTokenizer("^[a-z0-9'-]*$")
+    tokenizer = RegexpTokenizer("\w+|\'\-[\d\.]+|\S+")
     for line in lines:
         line = line.strip()
         for token in tokenizer.tokenize(line):
