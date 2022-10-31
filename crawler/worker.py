@@ -7,8 +7,6 @@ import scraper
 import time
 from nltk.probability import FreqDist
 from nltk.tokenize import RegexpTokenizer
-from nltk import clean_html
-from urllib.request import Request, urlopen
 
 class Worker(Thread):
     def __init__(self, worker_id, config, frontier):
@@ -34,17 +32,3 @@ class Worker(Thread):
             scraped_urls = scraper.scraper(tbd_url, resp)
             for scraped_url in scraped_urls:
                 self.frontier.add_url(scraped_url)
-                req = Request(scraped_url)
-                html_page = urlopen(req)
-                soup = BeautifulSoup(html_page, 'html.parser')
-                for data in soup(['style', 'script']):
-                    data.decompose()
-                self.addFdist(' '.join(soup.stripped_strings))
-            self.frontier.mark_url_complete(tbd_url)
-            time.sleep(self.config.time_delay)
-        print(self.FreqDist.most_common([50]))
-
-    def addFdist(self,page):
-        tokenizer = RegexpTokenizer("^[a-z0-9'-]*$")
-        for token in tokenizer.tokenize(page):
-            self.fdist[token] += 1
