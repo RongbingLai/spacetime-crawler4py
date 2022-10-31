@@ -15,8 +15,6 @@ maxUrl = ""
 ics_subdomains = defaultdict(int)
 # record bad urls that we do not want to crawl
 bad_urls = set()
-# record the total unique_pages
-unique_pages = 0
 # record scraped urls
 scraped_urls = set()
 
@@ -25,8 +23,6 @@ def scraper(url, resp):
     result = list()
     for link in links:
         if is_valid(link):
-            # count unique pages
-            unique_pages += 1
             result.append(link)
             
     return result
@@ -76,18 +72,6 @@ def top_50_tokens():
 
     print(fdist.most_common(50))
 
-    
-def scraper(url, resp):
-    links = extract_next_links(url, resp)
-    result = list()
-    for link in links:
-        if is_valid(link):
-            unique_pages += 1
-            result.append(link)
-            
-    return result
-
-
 def extract_next_links(url, resp):
     # Implementation required.
     # url: the URL that was used to get the page
@@ -104,7 +88,7 @@ def extract_next_links(url, resp):
     ret = set()
     try:
         if resp.status == 200 and is_valid(resp.url):
-            soup = BeautifulSoup(resp.raw_response, "html.parser")
+            soup = BeautifulSoup(resp.raw_response.content, "html.parser")
             
             currentLength = countMax(soup, resp.url)
 
@@ -165,7 +149,7 @@ def is_valid(url):
             return False
 
         #record subdomains
-        if re.match(r"(.+)\.ics\.uci\.edu(.*)", parsed.netloc.lower()):
+        if re.match(r".+\.ics\.uci\.edu(.*)", parsed.netloc.lower()):
             ics_subdomains[parsed.netloc] += 1
 
         # make sure is in the domain of initial domains
@@ -193,8 +177,8 @@ def is_valid(url):
         raise
 
 def output():
-    print("unique_pages: ", unique_pages)
+    print("unique_pages: ", len(scraped_urls))
     print("longest page is " + maxUrl + "with " + str(maxCount) + "words")
-    print(scraper.ics_subdomains)
+    print(ics_subdomains)
     top_50_tokens()
     
