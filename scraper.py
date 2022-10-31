@@ -14,7 +14,7 @@ maxUrl = ""
 # store the subdomains under ics.uci.edu
 ics_subdomains = defaultdict(int)
 # record bad urls that we do not want to crawl
-bad_urls = set()
+bad_urls = set("https://wics.ics.uci.edu/events")
 # record scraped urls
 scraped_urls = set()
 
@@ -161,7 +161,7 @@ def is_valid(url):
             return False
 
         #record subdomains
-        if "ics.uci.edu" in parsed.netloc.lower() and parsed.netloc.lower() != "www.ics.uci.edu":
+        if ".ics.uci.edu" in parsed.netloc.lower() and parsed.netloc.lower() != "www.ics.uci.edu":
             ics_subdomains[parsed.netloc] += 1
 
         # make sure is in the domain of initial domains
@@ -173,14 +173,14 @@ def is_valid(url):
             , parsed.netloc.lower()):
             return False
 
-        # added odc, java, py, c, txt, ss, scm
+        # added odc, java, py, c, txt, ss, scm, ppsx
         return not re.match(
             r".*\.(css|js|bmp|gif|jpe?g|ico"
             + r"|png|tiff?|mid|mp2|mp3|mp4"
             + r"|wav|avi|mov|mpeg|ram|m4v|mkv|ogg|ogv|pdf"
             + r"|ps|eps|tex|ppt|pptx|doc|docx|xls|xlsx|names"
             + r"|data|dat|exe|bz2|tar|msi|bin|7z|psd|dmg|iso"
-            + r"|epub|dll|cnf|tgz|sha1|txt|ss|scm"
+            + r"|epub|dll|cnf|tgz|sha1|txt|ss|scm|ppsx"
             + r"|thmx|mso|arff|rtf|jar|csv|odc|py|java|c"
             + r"|rm|smil|wmv|swf|wma|zip|rar|gz)$", parsed.path.lower())
 
@@ -190,7 +190,8 @@ def is_valid(url):
 
 def output():
     print("unique_pages: ", len(scraped_urls))
-    print("longest page is " + maxUrl + "with " + str(maxCount) + "words")
-    print(ics_subdomains)
+    print("longest page is " + maxUrl + "with " + str(maxCount) + " words")
+    for key in ics_subdomains:
+        print(key + ": " + str(ics_subdomains[key]))
     top_50_tokens()
     
