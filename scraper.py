@@ -3,6 +3,8 @@ from urllib.parse import urlparse
 import tokenize
 from bs4 import BeautifulSoup
 from collections import defaultdict
+from nltk.probability import FreqDist
+from nltk.tokenize import RegexpTokenizer
 
 
 # keep track of the longest page in terms of the number of words
@@ -53,12 +55,37 @@ def scrape_text(soup):
     f.write(content)
     f.close()
 
-# make the url to be absolute url
-def make_abs_url(url, raw_url):
-    # url: the URL that was used to get the page
-    # raw_url: the actual url of the page
-    if raw_url == None:
-        return raw_url
+def top_50_tokens():
+    g = open("stopwords.txt", "r")
+    lines = g.readlines()
+    g.close()
+    stopwords = set()
+    for line in lines:
+        stopwords.add(line.strip())
+    
+    f = open("tokens.txt", "r")
+    lines = f.readlines()
+    f.close()
+    fdist = FreqDist()#keep track of the token frequencies
+    tokenizer = RegexpTokenizer("^[a-z0-9'-]*$")
+    for line in lines:
+        line = line.strip()
+        for token in tokenizer.tokenize(line):
+            if token.lower() not in stopwords:
+                fdist[token.lower()] += 1
+
+    print(fdist.most_common(50))
+
+    
+def scraper(url, resp):
+    links = extract_next_links(url, resp)
+    result = list()
+    for link in links:
+        if is_valid(link):
+            unique_pages += 1
+            result.append(link)
+            
+    return result
 
 
 def extract_next_links(url, resp):
@@ -71,6 +98,8 @@ def extract_next_links(url, resp):
     #         resp.raw_response.url: the url, again
     #         resp.raw_response.content: the content of the page!
     # Return a list with the hyperlinks (as strings) scrapped from resp.raw_response.content
+
+    #TODO: Fix crawler trap
     
     ret = set()
     try:
@@ -167,4 +196,5 @@ def output():
     print("unique_pages: ", unique_pages)
     print("longest page is " + maxUrl + "with " + str(maxCount) + "words")
     print(scraper.ics_subdomains)
+    top_50_tokens()
     
