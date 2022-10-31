@@ -31,9 +31,11 @@ def countMax(soup, url):
     return len(website_content)
 ###################
 
-def scrape_text(soup, url):
+def scrape_text(soup):
     content = soup.get_text(strip=True)
-    
+    f = open("tokens.txt", "w")
+    f.write(content)
+    f.close()
     
 def scraper(url, resp):
     links = extract_next_links(url, resp)
@@ -69,6 +71,7 @@ def extract_next_links(url, resp):
             #If the words in the url is fewer than 20, ignore the page.
             if currentLength < 20:
                 return list()
+            scrape_text(soup)
             
             
             for link in soup.findAll('a'):
