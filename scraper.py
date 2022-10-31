@@ -69,6 +69,7 @@ def top_50_tokens():
     lines = f.readlines()
     f.close()
     fdist = FreqDist()#keep track of the token frequencies
+    #https://www.nltk.org/_modules/nltk/tokenize/regexp.html
     tokenizer = RegexpTokenizer("\w+|\'\-[\d\.]+|\S+")
     for line in lines:
         line = line.strip()
