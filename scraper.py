@@ -1,6 +1,5 @@
 import re
-from urllib.parse import urlparse
-import time 
+from urllib.parse import urlparse 
 import tokenize
 from bs4 import BeautifulSoup
 from collections import defaultdict
@@ -19,12 +18,23 @@ unique_pages = 0
 # record scraped urls
 scraped_urls = set()
 
+def scraper(url, resp):
+    links = extract_next_links(url, resp)
+    result = list()
+    for link in links:
+        if is_valid(link):
+            # count unique pages
+            unique_pages += 1
+            result.append(link)
+            
+    return result
+
 #2. find the longest page
 def countMax(soup, url):
     #added counter the longest page in terms of the number of words and related URL
     content = soup.get_text()
     #print(content)
-    website_content = re.split(r'[^0-9a-zA-Z]', content)
+    website_content = re.split(r'[^0-9a-zA-Z]', content) #remove "\n"?
 
     global maxCount
     global maxUrl
@@ -36,22 +46,19 @@ def countMax(soup, url):
     # print(maxUrl)
     return len(website_content)
 
-
+# tokenize text from the page
 def scrape_text(soup):
     content = soup.get_text(strip=True)
     f = open("tokens.txt", "w")
     f.write(content)
     f.close()
-    
-def scraper(url, resp):
-    links = extract_next_links(url, resp)
-    result = list()
-    for link in links:
-        if is_valid(link):
-            unique_pages += 1
-            result.append(link)
-            
-    return result
+
+# make the url to be absolute url
+def make_abs_url(url, raw_url):
+    # url: the URL that was used to get the page
+    # raw_url: the actual url of the page
+    if raw_url == None:
+        return raw_url
 
 
 def extract_next_links(url, resp):
@@ -64,8 +71,6 @@ def extract_next_links(url, resp):
     #         resp.raw_response.url: the url, again
     #         resp.raw_response.content: the content of the page!
     # Return a list with the hyperlinks (as strings) scrapped from resp.raw_response.content
-
-    #TODO: Fix crawler trap
     
     ret = set()
     try:
@@ -73,25 +78,27 @@ def extract_next_links(url, resp):
             soup = BeautifulSoup(resp.raw_response, "html.parser")
             
             currentLength = countMax(soup, resp.url)
-            #If the words in the url is fewer than 20, ignore the page.
+
+            #Low information: if the words in the url is fewer than 20, ignore the page.
             if currentLength < 20:
                 return list()
+
             scrape_text(soup)
             
-            
             for link in soup.findAll('a'):
-                #eliminate the fragment of the url.
                 raw_url = link.get('href')
-                #TODO: add a method to judge if the url is a relative url not starting with http
-                #normal url
-                #//www.ics.uci.edu
-                #/find/page/url
+
+                #check if the url is a relative url not starting with http
+                # raw_url = make_abs_url(url, raw_url)
+
+                #eliminate the fragment of the url.
                 if raw_url:
                     index = raw_url.find("#")
                     if index != -1:
                         raw_url = raw_url[:index]
                     ret.add(raw_url)
                 
+                #Detect and avoid crawler traps
                 if raw_url in scraped_urls:
                     print("repeated")
                 else:
@@ -99,7 +106,7 @@ def extract_next_links(url, resp):
                     ret.add(raw_url)
         else:
             bad_urls.add(resp.url)
-    except:
+    except Exception as e:
         bad_urls.add(resp.url)
     return list(ret)
 
@@ -126,11 +133,10 @@ def is_valid(url):
         parsed = urlparse(url)
 
         if parsed.scheme not in set(["http", "https"]):
-            #How to handle relative paths such as www.ics.uci.edu
             return False
 
         #record subdomains
-        if re.match(r"www.+\.ics\.uci\.edu\/*", parsed.netloc.lower()):
+        if re.match(r"(.+)\.ics\.uci\.edu(.*)", parsed.netloc.lower()):
             ics_subdomains[parsed.netloc] += 1
 
         # make sure is in the domain of initial domains
@@ -140,7 +146,6 @@ def is_valid(url):
             + r"|(.*)\.informatics\.uci\.edu(.*)"
             + r"|(.*)\.stat\.uci\.edu(.*)"
             , parsed.netloc.lower()):
-            print("is_valid(",parsed.netloc.lower(),") -> Subdomains")
             return False
 
         # added odc, java, py, c, txt, ss, scm
@@ -160,4 +165,6 @@ def is_valid(url):
 
 def output():
     print("unique_pages: ", unique_pages)
+    print("longest page is " + maxUrl + "with " + str(maxCount) + "words")
     print(scraper.ics_subdomains)
+    
