@@ -14,8 +14,6 @@ class Worker(Thread):
         self.config = config
         self.frontier = frontier
         # basic check for requests in scraper
-        self.fdist = FreqDist()
-
         assert {getsource(scraper).find(req) for req in {"from requests import", "import requests"}} == {-1}, "Do not use requests from scraper.py"
         super().__init__(daemon=True)
         
