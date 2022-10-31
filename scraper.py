@@ -1,5 +1,4 @@
 import re
-from urllib.request import Request, urlopen
 from urllib.parse import urlparse
 import time 
 import tokenize
@@ -11,7 +10,9 @@ maxCount = 0 # keep track of the longest page in terms of the number of words
 maxUrl = "" # keep track of the url of the longest page
 ics_subdomains = defaultdict(int)
 bad_urls = set()
+unique_pages = 0
 
+# 2. find the longest page
 def countMax(soup, url):
     ################ added counter the longest page in terms of the number of words and related URL
     content = soup.get_text()
@@ -53,7 +54,7 @@ def extract_next_links(url, resp):
         if resp.status == 200:
             req = Request(url)
             html_page = urlopen(req)
-            soup = BeautifulSoup(html_page, "lxml")
+            soup = BeautifulSoup(html_page, "html.parser")
             
             #resp.url = "http://www.ics.uci.edu/~gmark"
             

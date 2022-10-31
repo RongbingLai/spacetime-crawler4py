@@ -17,7 +17,6 @@ class Worker(Thread):
         super().__init__(daemon=True)
         
     def run(self):
-        unique_pages = 0
         while True:
             tbd_url = self.frontier.get_tbd_url()
             if not tbd_url:
@@ -29,9 +28,7 @@ class Worker(Thread):
                 f"using cache {self.config.cache_server}.")
             scraped_urls = scraper.scraper(tbd_url, resp)
             for scraped_url in scraped_urls:
-                unique_pages += 1
                 self.frontier.add_url(scraped_url)
             self.frontier.mark_url_complete(tbd_url)
             time.sleep(self.config.time_delay)
-        print("unique_pages: ", unique_pages)
-        print(scraper.ics_subdomains)
+        
