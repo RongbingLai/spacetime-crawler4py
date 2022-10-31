@@ -14,7 +14,7 @@ maxUrl = ""
 # store the subdomains under ics.uci.edu
 ics_subdomains = defaultdict(int)
 # record bad urls that we do not want to crawl
-bad_urls = set("https://wics.ics.uci.edu/events"'https://wics.ics.uci.edu/events')
+bad_urls = set("https://wics.ics.uci.edu/events")
 # record scraped urls
 scraped_urls = set()
 
@@ -24,7 +24,6 @@ def scraper(url, resp):
     for link in links:
         if is_valid(link):
             result.append(link)
-            
     return result
 
 #2. find the longest page
@@ -140,22 +139,13 @@ def is_valid(url):
     # If you decide to crawl it, return True; otherwise return False.
     # There are already some conditions that return False.
 
-    # Requirements:
-    # - filter out urls that do not point to webpages (add more in the pattern)
-    # - pdf files that do not end in .pdf
-    # https://stackoverflow.com/questions/312230/proper-mime-media-type-for-pdf-files
-    # - low information?
-    # - large files
     parsed = urlparse(url)
     try:
         #Url too short, not a valid url
         if not url:
             return False
         
-        if len(url) < 6:
-            return False
-
-        if url in bad_urls:
+        if len(url) < 6 or url in bad_urls:
             return False
 
         if parsed.scheme not in set(["http", "https"]):
@@ -181,8 +171,9 @@ def is_valid(url):
             + r"|wav|avi|mov|mpeg|ram|m4v|mkv|ogg|ogv|pdf"
             + r"|ps|eps|tex|ppt|pptx|doc|docx|xls|xlsx|names"
             + r"|data|dat|exe|bz2|tar|msi|bin|7z|psd|dmg|iso"
-            + r"|epub|dll|cnf|tgz|sha1|txt|ss|scm|ppsx"
+            + r"|epub|dll|cnf|tgz|sha1"
             + r"|thmx|mso|arff|rtf|jar|csv|odc|py|java|c"
+            + r"|sql|apk|img|war|r|txt|ss|scm|ppsx"
             + r"|rm|smil|wmv|swf|wma|zip|rar|gz)$", parsed.path.lower())
 
     except TypeError:
@@ -192,6 +183,7 @@ def is_valid(url):
 def output():
     print("unique_pages: ", len(scraped_urls))
     print("longest page is " + maxUrl + "with " + str(maxCount) + " words")
+    sorted(ics_subdomains)
     for key in ics_subdomains:
         print(key + ": " + str(ics_subdomains[key]))
     top_50_tokens()
