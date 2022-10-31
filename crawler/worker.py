@@ -5,8 +5,6 @@ from utils.download import download
 from utils import get_logger
 import scraper
 import time
-from nltk.probability import FreqDist
-from nltk.tokenize import RegexpTokenizer
 
 class Worker(Thread):
     def __init__(self, worker_id, config, frontier):

@@ -4,6 +4,8 @@ import time
 import tokenize
 from bs4 import BeautifulSoup
 from collections import defaultdict
+from nltk.probability import FreqDist
+from nltk.tokenize import RegexpTokenizer
 
 
 # keep track of the longest page in terms of the number of words
@@ -42,6 +44,28 @@ def scrape_text(soup):
     f = open("tokens.txt", "w")
     f.write(content)
     f.close()
+
+def top_50_tokens():
+    g = open("stopwords.txt", "r")
+    lines = g.readlines()
+    g.close()
+    stopwords = set()
+    for line in lines:
+        stopwords.add(line.strip())
+    
+    f = open("tokens.txt", "r")
+    lines = f.readlines()
+    f.close()
+    fdist = FreqDist()#keep track of the token frequencies
+    tokenizer = RegexpTokenizer("^[a-z0-9'-]*$")
+    for line in lines:
+        line = line.strip()
+        for token in tokenizer.tokenize(line):
+            if token.lower() not in stopwords:
+                fdist[token.lower()] += 1
+
+    print(fdist.most_common(50))
+
     
 def scraper(url, resp):
     links = extract_next_links(url, resp)
@@ -161,3 +185,4 @@ def is_valid(url):
 def output():
     print("unique_pages: ", unique_pages)
     print(scraper.ics_subdomains)
+    top_50_tokens()
