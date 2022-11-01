@@ -48,7 +48,8 @@ def scrape_text(soup):
     '''
     Scrape the texts and strip them, forming a paragraph and store them into the txt
     '''
-    content = soup.get_text(strip=True)
+    #content = soup.get_text(strip=True)
+    content = soup.text.strip()
     f = open("tokens.txt", "a")
     f.write(content)
     f.write('\n')
@@ -70,7 +71,7 @@ def top_50_tokens():
     f.close()
     fdist = FreqDist()#keep track of the token frequencies
     #https://www.nltk.org/_modules/nltk/tokenize/regexp.html
-    tokenizer = RegexpTokenizer("\w+|\'\-[\d\.]+|\S+")
+    tokenizer = RegexpTokenizer("^[A-Za-z]+['-]?[A-Za-z]+")
     for line in lines:
         line = line.strip()
         for token in tokenizer.tokenize(line):
@@ -95,8 +96,14 @@ def extract_next_links(url, resp):
     #TODO: Fix crawler trap
     
     ret = set()
+    
     try:
+
+        #if the type of the Content of the page is pdf, make it invalid
         if resp.status == 200 and is_valid(resp.url):
+            if 'pdf' in resp.raw_response.headers['Content-Type']:
+                bad_urls.add(resp.url)
+                
             soup = BeautifulSoup(resp.raw_response.content, "html.parser")
             
             currentLength = countMax(soup, resp.url)
