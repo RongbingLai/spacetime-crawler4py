@@ -36,7 +36,7 @@ def countMax(soup, url):
     #added counter the longest page in terms of the number of words and related URL
     
     
-    content = soup.get_text()
+    content = soup.text
     #print(content)
     website_content = re.split(r'[^0-9a-zA-Z]', content) #remove "\n"?
 
@@ -88,7 +88,7 @@ def top_50_tokens():
     lines = f.readlines()
     f.close()
     fdist = FreqDist()#keep track of the token frequencies
-    #https://www.nltk.org/_modules/nltk/tokenize/regexp.html
+    
     tokenizer = RegexpTokenizer("^[A-Za-z]+['-]?[A-Za-z]+")
     for line in lines:
         line = line.strip()
@@ -121,6 +121,11 @@ def extract_next_links(url, resp):
         if resp.status == 200 and is_valid(resp.url):
             if 'pdf' in resp.raw_response.headers['Content-Type']:
                 bad_urls.add(resp.url)
+                return list()
+
+            # web_type = resp.raw_response.headers['Link'].split(";")[3].split(",")[0]
+            # if web_type != ' type="application/json"':
+            #     raise
                 
             soup = BeautifulSoup(resp.raw_response.content, "html.parser")
             
@@ -129,8 +134,8 @@ def extract_next_links(url, resp):
             #Low information: if the words in the url is fewer than 50, ignore the page.
             if currentLength < 50:
                 return list()
-
-            scrape_text(soup)
+            else:
+                scrape_text(soup)
             
             for link in soup.findAll('a'):
                 raw_url = link.get('href')
