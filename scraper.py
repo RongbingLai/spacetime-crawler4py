@@ -18,6 +18,11 @@ bad_urls = set("https://wics.ics.uci.edu/events")
 # record scraped urls
 scraped_urls = set()
 
+# open the stopwords file
+with open("stopwords.txt", "r", encoding='utf8', errors='ignore') as openerS:
+    # each stop word is separated by a new line character
+    stopwords_list = openerS.read().split("\n")    
+
 def scraper(url, resp):
     links = extract_next_links(url, resp)
     result = list()
@@ -29,19 +34,32 @@ def scraper(url, resp):
 #2. find the longest page
 def countMax(soup, url):
     #added counter the longest page in terms of the number of words and related URL
+    
+    
     content = soup.get_text()
     #print(content)
     website_content = re.split(r'[^0-9a-zA-Z]', content) #remove "\n"?
 
     global maxCount
     global maxUrl
-    if maxCount < len(website_content):
-        maxCount = len(website_content)
-        maxUrl = url #??? url or resp.url????
+    count = 0
+    
+    for words in website_content:
+        if words not in stopwords_list:
+            count += 1
+    
+    if maxCount < count:
+        maxCount = count
+        maxUrl = url
+        with open("longest_page.txt", "w", encoding='utf8', errors='ignore') as openerW:
+            openerW.write("The longest page in terms of the number of words: \n")
+            openerW.write(maxUrl)
+            openerW.write("\nWords in that page: \n")
+            openerW.write(str(maxCount))
 
     # print(maxCount)
     # print(maxUrl)
-    return len(website_content)
+    return count
 
 # tokenize text from the page
 def scrape_text(soup):
@@ -108,8 +126,8 @@ def extract_next_links(url, resp):
             
             currentLength = countMax(soup, resp.url)
 
-            #Low information: if the words in the url is fewer than 20, ignore the page.
-            if currentLength < 20:
+            #Low information: if the words in the url is fewer than 50, ignore the page.
+            if currentLength < 50:
                 return list()
 
             scrape_text(soup)
@@ -146,6 +164,8 @@ def is_valid(url):
     # If you decide to crawl it, return True; otherwise return False.
     # There are already some conditions that return False.
 
+    # DEAL WITH PDF?!
+
     parsed = urlparse(url)
     try:
         #Url too short, not a valid url
@@ -160,6 +180,9 @@ def is_valid(url):
 
         #record subdomains
         if ".ics.uci.edu" in parsed.netloc.lower() and parsed.netloc.lower() != "www.ics.uci.edu":
+            key = parsed.netloc.lower()
+            if "www." in key or "www-" in key:
+                key = key[4:]
             ics_subdomains[parsed.netloc] += 1
 
         # make sure is in the domain of initial domains
@@ -189,9 +212,8 @@ def is_valid(url):
 
 def output():
     print("unique_pages: ", len(scraped_urls))
-    print("longest page is " + maxUrl + "with " + str(maxCount) + " words")
-    sorted(ics_subdomains)
-    for key in ics_subdomains:
+    print("longest page is " + maxUrl + " with " + str(maxCount) + " words")
+    for key in sorted(ics_subdomains):
         print(key + ": " + str(ics_subdomains[key]))
     top_50_tokens()
     
