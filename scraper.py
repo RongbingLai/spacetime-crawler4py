@@ -185,10 +185,7 @@ def is_valid(url):
 
         #record subdomains
         if ".ics.uci.edu" in parsed.netloc.lower() and parsed.netloc.lower() != "www.ics.uci.edu":
-            key = parsed.netloc.lower()
-            if "www." in key or "www-" in key:
-                key = key[4:]
-            ics_subdomains[parsed.netloc] += 1
+            ics_subdomains[parsed.netloc.lower()] += 1
 
         # make sure is in the domain of initial domains
         if not re.match(
