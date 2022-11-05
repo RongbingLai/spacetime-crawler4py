@@ -68,7 +68,7 @@ def scrape_text(soup):
     '''
     #content = soup.get_text(strip=True)
     content = soup.text.strip()
-    f = open("tokens.txt", "a")
+    f = open("tokens.txt", "a+", encoding="utf-8")
     f.write(content)
     f.write('\n')
     f.close()
@@ -99,6 +99,31 @@ def top_50_tokens():
     print(fdist.most_common(50))
     return fdist.most_common(50)
     
+#Add URL to 'Good' list
+def add_good_url(url):
+    if url in scraped_urls:
+        return False
+    scraped_urls.add(url)
+    try:
+        file = open("scraped_url.txt", "a+", encoding="utf-8")
+        file.write(url+"\n")
+        file.close()
+    except:
+        pass
+    # print("GOOD (",len(scraped_urls),"):", url)
+    return True
+
+#Add URL to 'Bad' set
+def add_bad_url(url):
+    bad_urls.add(url)
+    try:
+        file = open("bad_url.txt", "a+", encoding="utf-8")
+        file.write(url+"\n")
+        file.close()
+    except:
+        pass
+    # print("BAD (",len(bad_urls),"):", url)
+    return True
 
 def extract_next_links(url, resp):
     # Implementation required.
@@ -118,9 +143,11 @@ def extract_next_links(url, resp):
     try:
 
         #if the type of the Content of the page is pdf, make it invalid
-        if resp.status == 200 and is_valid(resp.url):
+        #DEBUG!
+        #if resp.status == 200 and is_valid(resp.url):
+        if resp.status == 200:
             if 'pdf' in resp.raw_response.headers['Content-Type']:
-                bad_urls.add(resp.url)
+                add_bad_url(resp.url)
                 return list()
 
             # web_type = resp.raw_response.headers['Link'].split(";")[3].split(",")[0]
@@ -137,6 +164,9 @@ def extract_next_links(url, resp):
             else:
                 scrape_text(soup)
             
+            #Because 'url' was fetched successfully and it's a good page, add 'url' to a set now.
+            add_good_url(url)
+
             for link in soup.findAll('a'):
                 raw_url = link.get('href')
 
@@ -144,23 +174,22 @@ def extract_next_links(url, resp):
                 # raw_url = make_abs_url(url, raw_url)
 
                 #eliminate the fragment of the url.
-                if raw_url:
+                if raw_url and is_valid(raw_url):
                     index = raw_url.find("#")
                     if index != -1:
                         raw_url = raw_url[:index]
-                    ret.add(raw_url)
+                    #ret.add(raw_url)
+                else:
+                    add_bad_url(raw_url)
                 
                 #Detect and avoid crawler traps
-                if raw_url in scraped_urls:
-                    # print("repeated")
-                    pass
-                else:
-                    scraped_urls.add(raw_url)
+                if raw_url not in scraped_urls:
                     ret.add(raw_url)
         else:
-            bad_urls.add(resp.url)
+            add_bad_url(resp.url)
     except Exception as e:
-        bad_urls.add(resp.url)
+        print(e)
+        add_bad_url(resp.url)
     return list(ret)
 
 
@@ -185,10 +214,7 @@ def is_valid(url):
 
         #record subdomains
         if ".ics.uci.edu" in parsed.netloc.lower() and parsed.netloc.lower() != "www.ics.uci.edu":
-            key = parsed.netloc.lower()
-            if "www." in key or "www-" in key:
-                key = key[4:]
-            ics_subdomains[parsed.netloc] += 1
+            ics_subdomains[parsed.netloc.lower()] += 1
 
         # make sure is in the domain of initial domains
         if not re.match(
@@ -218,7 +244,15 @@ def is_valid(url):
 def output():
     print("unique_pages: ", len(scraped_urls))
     print("longest page is " + maxUrl + " with " + str(maxCount) + " words")
+
+    f = open("result.txt", "a+", encoding="utf-8")
+    f.write("unique_pages: " + str(len(scraped_urls)) + "\n")
+    f.write("longest page is " + maxUrl + " with " + str(maxCount) + " words" + "\n")
+    f.write("ICS Subdomains: \n")
     for key in sorted(ics_subdomains):
         print(key + ": " + str(ics_subdomains[key]))
-    top_50_tokens()
+        f.write(key + ": " + str(ics_subdomains[key]) + "\n")
+    tokens = top_50_tokens()
+    f.write(str(tokens))
+    f.close()
     
